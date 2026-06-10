@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import type { AppView } from './components/Layout';
 import CatalogPage from './components/CatalogPage';
 import MyOrdersPage from './components/MyOrdersPage';
+import AllOrdersPage from './components/AllOrdersPage';
 import OrderModal from './components/OrderModal';
 import AccessDenied from './components/AccessDenied';
 import { useRole } from './context/RoleContext';
@@ -67,6 +68,7 @@ function App() {
         // Order User sees only their own orders
         return <MyOrdersPage filterByUserId={isAdmin ? undefined : userId} />;
       case 'all-orders':
+        return <AllOrdersPage />;
       case 'reports':
         // Placeholder — implemented in Etapa 3 / 5
         return (
