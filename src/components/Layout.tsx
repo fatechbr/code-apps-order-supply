@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { useRole } from '../context/RoleContext';
-import cognaLogo from '../assets/cogna-logo-lightmode-b64';
+import cognaLogoLight from '../assets/cogna-logo-lightmode-b64';
+import cognaLogoDark from '../assets/cogna-logo-darkmode-b64';
 
 export type AppView = 'catalog' | 'orders' | 'all-orders' | 'reports';
 
@@ -46,7 +47,7 @@ export default function Layout({ children, currentView, onNavigate }: LayoutProp
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img src={cognaLogo} alt="Cogna" className="h-8 w-auto" />
+              <img src={isDark ? cognaLogoDark : cognaLogoLight} alt="Cogna" className="h-8 w-auto" />
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Supply Hub</h1>
             </div>
             <div className="flex items-center gap-4">
