@@ -144,7 +144,3 @@ vite.config.ts.timestamp-*
 
 # Power Apps - environment-specific config (contains appId, environmentId)
 power.config.json
-
-# Company branding assets (large base64 file / internal)
-src/assets/cogna-logo-b64.ts
-src/assets/cogna-logo.png

@@ -7,6 +7,7 @@ import MyOrdersPage from './components/MyOrdersPage';
 import AllOrdersPage from './components/AllOrdersPage';
 import OrderModal from './components/OrderModal';
 import AccessDenied from './components/AccessDenied';
+import ReportsPage from './components/ReportsPage';
 import { useRole } from './context/RoleContext';
 import type { CatalogItem } from './types';
 
@@ -70,12 +71,7 @@ function App() {
       case 'all-orders':
         return <AllOrdersPage />;
       case 'reports':
-        // Placeholder — implemented in Etapa 3 / 5
-        return (
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
-            <p className="text-gray-500 dark:text-gray-400">Coming soon in next steps...</p>
-          </div>
-        );
+        return <ReportsPage />;
       default:
         return <CatalogPage onOrderClick={handleOrderClick} />;
     }

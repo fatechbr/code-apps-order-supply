@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { useRole } from '../context/RoleContext';
-import cognaLogo from '../assets/cogna-logo-b64';
+import cognaLogo from '../assets/cogna-logo-lightmode-b64';
 
 export type AppView = 'catalog' | 'orders' | 'all-orders' | 'reports';
 
