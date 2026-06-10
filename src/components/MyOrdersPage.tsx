@@ -10,7 +10,12 @@ interface OrderWithItemName extends Kcs_internalorders {
   itemName?: string;
 }
 
-export default function MyOrdersPage() {
+interface MyOrdersPageProps {
+  /** When provided, only orders owned by this userId are shown (Order User mode) */
+  filterByUserId?: string;
+}
+
+export default function MyOrdersPage({ filterByUserId }: MyOrdersPageProps = {}) {
   const [orders, setOrders] = useState<OrderWithItemName[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,16 +28,20 @@ export default function MyOrdersPage() {
 
   useEffect(() => {
     loadOrders();
-  }, []);
+  }, [filterByUserId]);
 
   const loadOrders = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch all active orders
+      // Fetch active orders, optionally filtered by owner
+      const ownerFilter = filterByUserId
+        ? `statecode eq 0 and _ownerid_value eq '${filterByUserId}'`
+        : 'statecode eq 0';
+
       const result = await Kcs_internalordersService.getAll({
-        filter: 'statecode eq 0',
+        filter: ownerFilter,
         orderBy: ['kcs_orderdate desc'],
       });
 

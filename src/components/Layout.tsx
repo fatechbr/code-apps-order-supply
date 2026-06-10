@@ -1,16 +1,18 @@
 import type { ReactNode } from 'react';
-import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useTheme } from '../hooks/useTheme';
+import { useRole } from '../context/RoleContext';
 import cognaLogo from '../assets/cogna-logo-b64';
+
+export type AppView = 'catalog' | 'orders' | 'all-orders' | 'reports';
 
 interface LayoutProps {
   children: ReactNode;
-  currentView: 'catalog' | 'orders';
-  onNavigate: (view: 'catalog' | 'orders') => void;
+  currentView: AppView;
+  onNavigate: (view: AppView) => void;
 }
 
 export default function Layout({ children, currentView, onNavigate }: LayoutProps) {
-  const user = useCurrentUser();
+  const { displayName, isAdmin } = useRole();
   const { toggle, isDark } = useTheme();
 
   const getInitials = (name: string) => {
@@ -21,6 +23,21 @@ export default function Layout({ children, currentView, onNavigate }: LayoutProp
       .map((part) => part[0].toUpperCase())
       .join('');
   };
+
+  const navItem = (view: AppView, label: string) => (
+    <li>
+      <button
+        onClick={() => onNavigate(view)}
+        className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors ${
+          currentView === view
+            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+        }`}
+      >
+        {label}
+      </button>
+    </li>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -50,14 +67,17 @@ export default function Layout({ children, currentView, onNavigate }: LayoutProp
                 )}
               </button>
 
-              {user.displayName && (
+              {displayName && (
                 <div className="flex items-center gap-3">
                   <div className="flex flex-col text-right">
                     <span className="text-xs text-gray-500 dark:text-gray-400">Welcome</span>
-                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{user.displayName}</span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{displayName}</span>
+                    {isAdmin && (
+                      <span className="text-xs font-medium text-blue-600 dark:text-blue-400">Admin</span>
+                    )}
                   </div>
                   <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-                    <span className="text-white text-sm font-semibold">{getInitials(user.displayName)}</span>
+                    <span className="text-white text-sm font-semibold">{getInitials(displayName)}</span>
                   </div>
                 </div>
               )}
@@ -71,31 +91,19 @@ export default function Layout({ children, currentView, onNavigate }: LayoutProp
         <aside className="w-64 bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700 min-h-[calc(100vh-73px)]">
           <nav className="p-4">
             <ul className="space-y-2">
-              <li>
-                <button
-                  onClick={() => onNavigate('catalog')}
-                  className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors ${
-                    currentView === 'catalog'
-                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  📦 Catalog
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onNavigate('orders')}
-                  className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors ${
-                    currentView === 'orders'
-                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  📋 My Orders
-                </button>
-              </li>
+              {navItem('catalog', '📦 Catalog')}
+              {navItem('orders', '📋 My Orders')}
+              {isAdmin && navItem('all-orders', '🗂️ All Orders')}
+              {isAdmin && navItem('reports', '📊 Reports')}
             </ul>
+
+            {isAdmin && (
+              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider px-2 mb-2">
+                  Admin
+                </p>
+              </div>
+            )}
           </nav>
         </aside>
 
