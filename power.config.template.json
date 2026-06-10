@@ -1,0 +1,35 @@
+{
+  "version": "1.0",
+  "appId": "<YOUR_POWER_APPS_APP_ID>",
+  "appDisplayName": "Internal Order Supply App",
+  "region": "prod",
+  "environmentId": "<YOUR_ENVIRONMENT_ID>",
+  "description": " ",
+  "buildPath": "./dist",
+  "buildEntryPoint": "index.html",
+  "localAppUrl": "http://localhost:3000",
+  "logoPath": "Default",
+  "connectionReferences": {},
+  "databaseReferences": {
+    "default.cds": {
+      "dataSources": {
+        "catalogitems": {
+          "entitySetName": "kcs_catalogitems",
+          "logicalName": "kcs_catalogitem",
+          "isHidden": false
+        },
+        "internalorders": {
+          "entitySetName": "kcs_internalorders",
+          "logicalName": "kcs_internalorder",
+          "isHidden": false
+        },
+        "usu_rios": {
+          "entitySetName": "systemusers",
+          "logicalName": "systemuser",
+          "isHidden": false
+        }
+      },
+      "environmentVariableName": ""
+    }
+  }
+}
