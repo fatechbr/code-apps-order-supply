@@ -4,9 +4,12 @@ import Layout from './components/Layout';
 import CatalogPage from './components/CatalogPage';
 import MyOrdersPage from './components/MyOrdersPage';
 import OrderModal from './components/OrderModal';
+import AccessDenied from './components/AccessDenied';
+import { useRole } from './context/RoleContext';
 import type { CatalogItem } from './types';
 
 function App() {
+  const { role, isLoading } = useRole();
   const [currentView, setCurrentView] = useState<'catalog' | 'orders'>('catalog');
   const [selectedItem, setSelectedItem] = useState<CatalogItem | null>(null);
   const [showToast, setShowToast] = useState(false);
@@ -20,9 +23,8 @@ function App() {
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
     
-    // If on catalog page, stay there; otherwise navigate to orders
     if (currentView === 'catalog') {
-      // Optionally refresh catalog
+      // stay
     } else {
       setCurrentView('orders');
     }
@@ -31,6 +33,23 @@ function App() {
   const handleCloseModal = () => {
     setSelectedItem(null);
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // No role assigned
+  if (role === 'none') {
+    return <AccessDenied />;
+  }
 
   return (
     <>
