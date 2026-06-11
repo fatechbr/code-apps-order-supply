@@ -302,6 +302,19 @@ export default function AllOrdersPage() {
   // Calculate overdue orders
   const overdueCount = filtered.filter(o => getSLAStatus(o.kcs_neededby) === 'overdue').length;
 
+  // Calculate stats for dashboard cards
+  const totalCount = filtered.length;
+  const pendingCount = filtered.filter(o => o.kcs_orderstatus === 615710000).length; // Submitted
+  
+  const sevenDaysAgo = new Date('2026-06-11');
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const completedThisWeekCount = filtered.filter(o => {
+    if (o.kcs_orderstatus !== 615710004) return false; // Not Delivered
+    if (!o.kcs_orderdate) return false;
+    const orderDate = new Date(o.kcs_orderdate);
+    return orderDate >= sevenDaysAgo;
+  }).length;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -350,6 +363,53 @@ export default function AllOrdersPage() {
           </svg>
           Refresh
         </button>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {/* Total Orders */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Orders</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{totalCount}</p>
+            </div>
+            <div className="text-4xl">📊</div>
+          </div>
+        </div>
+
+        {/* Pending Approval */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Approval</p>
+              <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mt-2">{pendingCount}</p>
+            </div>
+            <div className="text-4xl">⏳</div>
+          </div>
+        </div>
+
+        {/* Overdue */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Overdue</p>
+              <p className="text-3xl font-bold text-red-600 dark:text-red-400 mt-2">{overdueCount}</p>
+            </div>
+            <div className="text-4xl">⚠️</div>
+          </div>
+        </div>
+
+        {/* Completed This Week */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completed This Week</p>
+              <p className="text-3xl font-bold text-green-600 dark:text-green-400 mt-2">{completedThisWeekCount}</p>
+            </div>
+            <div className="text-4xl">✅</div>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}
