@@ -5,6 +5,7 @@ import type { Kcs_internalorders } from '../generated/models/Kcs_internalordersM
 import { OrderStatusMap, OrderStatusColors } from '../types';
 import ConfirmModal from './ConfirmModal';
 import EditOrderModal from './EditOrderModal';
+import OrderTimelineModal from './OrderTimelineModal';
 
 interface OrderWithItemName extends Kcs_internalorders {
   itemName?: string;
@@ -25,6 +26,7 @@ export default function MyOrdersPage({ filterByUserId }: MyOrdersPageProps = {})
     orderId: string | null;
   }>({ isOpen: false, orderId: null });
   const [editingOrder, setEditingOrder] = useState<OrderWithItemName | null>(null);
+  const [timelineOrder, setTimelineOrder] = useState<OrderWithItemName | null>(null);
 
   useEffect(() => {
     loadOrders();
@@ -246,6 +248,16 @@ export default function MyOrdersPage({ filterByUserId }: MyOrdersPageProps = {})
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                       <div className="flex items-center justify-end gap-1">
                       <button
+                        onClick={() => setTimelineOrder(order)}
+                        className="inline-flex items-center justify-center p-2 text-purple-600 hover:text-purple-800 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-md transition-colors"
+                        title="View timeline"
+                        aria-label="View timeline"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </button>
+                      <button
                         onClick={() => setEditingOrder(order)}
                         className="inline-flex items-center justify-center p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
                         title="Edit order"
@@ -301,6 +313,13 @@ export default function MyOrdersPage({ filterByUserId }: MyOrdersPageProps = {})
             setEditingOrder(null);
             loadOrders();
           }}
+        />
+      )}
+
+      {timelineOrder && (
+        <OrderTimelineModal
+          order={timelineOrder}
+          onClose={() => setTimelineOrder(null)}
         />
       )}
     </div>
