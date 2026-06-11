@@ -245,6 +245,37 @@ export default function AllOrdersPage() {
     }
   };
 
+  // SLA status calculation
+  const getSLAStatus = (neededByDate?: string): 'overdue' | 'warning' | 'ok' | 'none' => {
+    if (!neededByDate) return 'none';
+    
+    const today = new Date('2026-06-11'); // Current date
+    today.setHours(0, 0, 0, 0);
+    
+    const neededBy = new Date(neededByDate);
+    neededBy.setHours(0, 0, 0, 0);
+    
+    const diffTime = neededBy.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) return 'overdue'; // Past due
+    if (diffDays <= 3) return 'warning'; // Due within 3 days
+    return 'ok'; // More than 3 days
+  };
+
+  const getSLABadgeClasses = (status: 'overdue' | 'warning' | 'ok' | 'none') => {
+    switch (status) {
+      case 'overdue':
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+      case 'warning':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+      case 'ok':
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+    }
+  };
+
   const getStatusBadge = (statusValue?: number) => {
     if (statusValue === undefined) return null;
     const status = OrderStatusMap[statusValue] ?? 'Submitted';
@@ -267,6 +298,9 @@ export default function AllOrdersPage() {
     if (filterDateTo && o.kcs_orderdate && o.kcs_orderdate > filterDateTo + 'T23:59:59') return false;
     return true;
   });
+
+  // Calculate overdue orders
+  const overdueCount = filtered.filter(o => getSLAStatus(o.kcs_neededby) === 'overdue').length;
 
   if (loading) {
     return (
@@ -296,9 +330,16 @@ export default function AllOrdersPage() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">All Orders</h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {filtered.length} order{filtered.length !== 1 ? 's' : ''} found
-          </p>
+          <div className="flex items-center gap-4 mt-1">
+            <p className="text-gray-600 dark:text-gray-400">
+              {filtered.length} order{filtered.length !== 1 ? 's' : ''} found
+            </p>
+            {overdueCount > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 text-sm font-medium text-red-700 bg-red-100 dark:bg-red-900/30 dark:text-red-400 rounded-md">
+                ⚠️ {overdueCount} overdue
+              </span>
+            )}
+          </div>
         </div>
         <button
           onClick={loadOrders}
@@ -488,8 +529,19 @@ export default function AllOrdersPage() {
                     <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                       {formatDate(order.kcs_orderdate)}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                      {formatDate(order.kcs_neededby)}
+                    <td className="px-4 py-3 text-sm whitespace-nowrap">
+                      {order.kcs_neededby ? (
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-block px-2 py-1 text-xs font-medium rounded ${getSLABadgeClasses(getSLAStatus(order.kcs_neededby))}`}>
+                            {formatDate(order.kcs_neededby)}
+                          </span>
+                          {getSLAStatus(order.kcs_neededby) === 'overdue' && (
+                            <span className="text-red-600 dark:text-red-400" title="Overdue">⚠️</span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
                     </td>
 
                     {/* Status — inline editable */}
