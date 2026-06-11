@@ -272,7 +272,7 @@ export default function KanbanPage() {
   const activeOrder = activeId ? orders.find((o) => o.kcs_internalorderid === activeId) : null;
 
   return (
-    <div>
+    <div className="max-w-full">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
@@ -294,7 +294,7 @@ export default function KanbanPage() {
 
       {/* Kanban Columns */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6">
           {STATUS_COLUMNS.map((status) => (
             <div
               key={status}

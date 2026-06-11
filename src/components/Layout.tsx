@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { useRole } from '../context/RoleContext';
 import cognaLogoLight from '../assets/cogna-logo-lightmode-b64';
@@ -15,6 +15,7 @@ interface LayoutProps {
 export default function Layout({ children, currentView, onNavigate }: LayoutProps) {
   const { displayName, isAdmin } = useRole();
   const { toggle, isDark } = useTheme();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const getInitials = (name: string) => {
     return name
@@ -28,7 +29,10 @@ export default function Layout({ children, currentView, onNavigate }: LayoutProp
   const navItem = (view: AppView, label: string) => (
     <li>
       <button
-        onClick={() => onNavigate(view)}
+        onClick={() => {
+          onNavigate(view);
+          setSidebarOpen(false); // Close sidebar on mobile after navigation
+        }}
         className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors ${
           currentView === view
             ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
@@ -47,6 +51,20 @@ export default function Layout({ children, currentView, onNavigate }: LayoutProp
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
+              {/* Hamburger button */}
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors lg:hidden"
+                aria-label="Toggle menu"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {sidebarOpen ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  )}
+                </svg>
+              </button>
               <img src={isDark ? cognaLogoDark : cognaLogoLight} alt="Cogna" className="h-8 w-auto" />
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Supply Hub</h1>
             </div>
@@ -87,9 +105,21 @@ export default function Layout({ children, currentView, onNavigate }: LayoutProp
         </div>
       </header>
 
-      <div className="flex">
+      <div className="flex relative">
+        {/* Backdrop for mobile */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {/* Sidebar */}
-        <aside className="w-64 bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700 min-h-[calc(100vh-73px)]">
+        <aside
+          className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700 min-h-[calc(100vh-73px)] transform transition-transform duration-300 ease-in-out lg:transform-none ${
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          }`}
+        >
           <nav className="p-4">
             <ul className="space-y-2">
               {navItem('catalog', '📦 Catalog')}
@@ -108,7 +138,7 @@ export default function Layout({ children, currentView, onNavigate }: LayoutProp
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 overflow-x-auto lg:ml-0">
           {children}
         </main>
       </div>
