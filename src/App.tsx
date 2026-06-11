@@ -8,6 +8,7 @@ import AllOrdersPage from './components/AllOrdersPage';
 import OrderModal from './components/OrderModal';
 import AccessDenied from './components/AccessDenied';
 import ReportsPage from './components/ReportsPage';
+import KanbanPage from './components/KanbanPage';
 import { useRole } from './context/RoleContext';
 import type { CatalogItem } from './types';
 
@@ -19,14 +20,14 @@ function App() {
 
   // Guard: if role changes to user and they're on an admin-only view, redirect to catalog
   useEffect(() => {
-    if (!isAdmin && (currentView === 'all-orders' || currentView === 'reports')) {
+    if (!isAdmin && (currentView === 'all-orders' || currentView === 'reports' || currentView === 'kanban')) {
       setCurrentView('catalog');
     }
   }, [isAdmin, currentView]);
 
   const handleNavigate = (view: AppView) => {
     // Guard: prevent non-admins from accessing admin views
-    if (!isAdmin && (view === 'all-orders' || view === 'reports')) return;
+    if (!isAdmin && (view === 'all-orders' || view === 'reports' || view === 'kanban')) return;
     setCurrentView(view);
   };
 
@@ -70,6 +71,8 @@ function App() {
         return <MyOrdersPage filterByUserId={isAdmin ? undefined : userId} />;
       case 'all-orders':
         return <AllOrdersPage />;
+      case 'kanban':
+        return <KanbanPage />;
       case 'reports':
         return <ReportsPage />;
       default:

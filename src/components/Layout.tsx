@@ -4,7 +4,7 @@ import { useRole } from '../context/RoleContext';
 import cognaLogoLight from '../assets/cogna-logo-lightmode-b64';
 import cognaLogoDark from '../assets/cogna-logo-darkmode-b64';
 
-export type AppView = 'catalog' | 'orders' | 'all-orders' | 'reports';
+export type AppView = 'catalog' | 'orders' | 'all-orders' | 'reports' | 'kanban';
 
 interface LayoutProps {
   children: ReactNode;
@@ -93,8 +93,7 @@ export default function Layout({ children, currentView, onNavigate }: LayoutProp
           <nav className="p-4">
             <ul className="space-y-2">
               {navItem('catalog', '📦 Catalog')}
-              {navItem('orders', '📋 My Orders')}
-              {isAdmin && navItem('all-orders', '🗂️ All Orders')}
+              {navItem('orders', '📋 My Orders')}              {isAdmin && navItem('kanban', '📋 Kanban')}              {isAdmin && navItem('all-orders', '🗂️ All Orders')}
               {isAdmin && navItem('reports', '📊 Reports')}
             </ul>
 
