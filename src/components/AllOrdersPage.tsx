@@ -5,6 +5,8 @@ import { SystemusersService } from '../generated/services/SystemusersService';
 import type { Kcs_internalorders } from '../generated/models/Kcs_internalordersModel';
 import { OrderStatusMap, OrderStatusColors } from '../types';
 import type { OrderStatus } from '../types';
+import EditOrderModal from './EditOrderModal';
+import ConfirmModal from './ConfirmModal';
 
 interface OrderRow extends Kcs_internalorders {
   itemName?: string;
@@ -35,6 +37,14 @@ export default function AllOrdersPage() {
     field: 'status' | 'assignedTo';
   } | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
+
+  // Edit and delete modals
+  const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
+  const [confirmDeleteModal, setConfirmDeleteModal] = useState<{
+    isOpen: boolean;
+    orderId: string | null;
+  }>({ isOpen: false, orderId: null });
+  const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     loadOrders();
@@ -139,6 +149,44 @@ export default function AllOrdersPage() {
   };
 
   const formatDate = (d?: string) => (d ? new Date(d).toLocaleDateString() : '-');
+
+  const getOwnerName = (order: OrderRow) => {
+    return order.owneridname || '-';
+  };
+
+  const handleDeleteOrder = (orderId: string) => {
+    setConfirmDeleteModal({ isOpen: true, orderId });
+  };
+
+  const confirmDeleteOrder = async () => {
+    const orderId = confirmDeleteModal.orderId;
+    if (!orderId) return;
+
+    setConfirmDeleteModal({ isOpen: false, orderId: null });
+    setDeletingOrderId(orderId);
+
+    try {
+      // Inactivate the order (following Cogna pattern - never delete, always inactivate)
+      const result = await Kcs_internalordersService.update(orderId, {
+        statecode: 1 as any, // Inactive
+        statuscode: 2 as any,
+      });
+      if (result.success) {
+        loadOrders();
+      } else {
+        alert(result.error?.message || 'Failed to delete order');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred while deleting the order');
+    } finally {
+      setDeletingOrderId(null);
+    }
+  };
+
+  const cancelDeleteOrder = () => {
+    setConfirmDeleteModal({ isOpen: false, orderId: null });
+  };
 
   const getStatusBadge = (statusValue?: number) => {
     if (statusValue === undefined) return null;
@@ -280,7 +328,7 @@ export default function AllOrdersPage() {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  {['Order ID', 'Item', 'Qty', 'Order Date', 'Needed By', 'Status', 'Ordered By', 'Assigned To'].map((h) => (
+                  {['Order ID', 'Item', 'Qty', 'Order Date', 'Needed By', 'Status', 'Ordered By', 'Assigned To', 'Actions'].map((h) => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       {h}
                     </th>
@@ -365,12 +413,46 @@ export default function AllOrdersPage() {
                           className="group flex items-center gap-1 text-gray-700 dark:text-gray-300"
                           title="Click to reassign"
                         >
-                          <span>{order.owneridname ?? '-'}</span>
+                          <span>{getOwnerName(order)}</span>
                           <svg className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
                         </button>
                       )}
+                    </td>
+
+                    {/* Actions */}
+                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => setEditingOrder(order)}
+                          className="inline-flex items-center justify-center p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-md transition-colors"
+                          title="Edit order"
+                          aria-label="Edit order"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteOrder(order.kcs_internalorderid)}
+                          disabled={deletingOrderId === order.kcs_internalorderid}
+                          className="inline-flex items-center justify-center p-2 text-red-600 hover:text-red-800 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Delete order"
+                          aria-label="Delete order"
+                        >
+                          {deletingOrderId === order.kcs_internalorderid ? (
+                            <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                          ) : (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -379,6 +461,29 @@ export default function AllOrdersPage() {
           </div>
         </div>
       )}
+
+      {/* Edit Order Modal */}
+      {editingOrder && (
+        <EditOrderModal
+          order={editingOrder}
+          onClose={() => setEditingOrder(null)}
+          onSuccess={() => {
+            setEditingOrder(null);
+            loadOrders();
+          }}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={confirmDeleteModal.isOpen}
+        title="Delete Order"
+        message="Are you sure you want to delete this order? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteOrder}
+        onCancel={cancelDeleteOrder}
+      />
     </div>
   );
 }
