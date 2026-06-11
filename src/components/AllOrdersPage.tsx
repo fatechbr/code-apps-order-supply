@@ -48,6 +48,11 @@ export default function AllOrdersPage() {
   }>({ isOpen: false, orderId: null });
   const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
 
+  // Bulk actions
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
+  const [bulkStatus, setBulkStatus] = useState<string>('');
+  const [bulkUpdating, setBulkUpdating] = useState(false);
+
   useEffect(() => {
     loadOrders();
     loadUsers();
@@ -190,6 +195,56 @@ export default function AllOrdersPage() {
     setConfirmDeleteModal({ isOpen: false, orderId: null });
   };
 
+  // Bulk actions handlers
+  const toggleSelectOrder = (orderId: string) => {
+    setSelectedOrderIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(orderId)) {
+        newSet.delete(orderId);
+      } else {
+        newSet.add(orderId);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllOrders = (orderIds: string[]) => {
+    setSelectedOrderIds(new Set(orderIds));
+  };
+
+  const clearSelection = () => {
+    setSelectedOrderIds(new Set());
+    setBulkStatus('');
+  };
+
+  const applyBulkStatusChange = async () => {
+    if (!bulkStatus || selectedOrderIds.size === 0) return;
+
+    setBulkUpdating(true);
+    try {
+      const updatePromises = Array.from(selectedOrderIds).map(orderId =>
+        Kcs_internalordersService.update(orderId, {
+          kcs_orderstatus: Number(bulkStatus) as any,
+        })
+      );
+
+      const results = await Promise.all(updatePromises);
+      const failedCount = results.filter(r => !r.success).length;
+
+      if (failedCount > 0) {
+        alert(`${failedCount} order(s) failed to update. Please try again.`);
+      }
+
+      loadOrders();
+      clearSelection();
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred while updating orders');
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
   const getStatusBadge = (statusValue?: number) => {
     if (statusValue === undefined) return null;
     const status = OrderStatusMap[statusValue] ?? 'Submitted';
@@ -319,6 +374,63 @@ export default function AllOrdersPage() {
         )}
       </div>
 
+      {/* Bulk Actions Bar */}
+      {selectedOrderIds.size > 0 && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                {selectedOrderIds.size} order{selectedOrderIds.size !== 1 ? 's' : ''} selected
+              </span>
+              <button
+                onClick={clearSelection}
+                className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                Clear selection
+              </button>
+            </div>
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                Change Status:
+              </label>
+              <select
+                value={bulkStatus}
+                onChange={(e) => setBulkStatus(e.target.value)}
+                className="px-3 py-2 border border-blue-300 dark:border-blue-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={bulkUpdating}
+              >
+                <option value="">Select status...</option>
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+              <button
+                onClick={applyBulkStatusChange}
+                disabled={!bulkStatus || bulkUpdating}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              >
+                {bulkUpdating ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Apply
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Table */}
       {filtered.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
@@ -330,6 +442,21 @@ export default function AllOrdersPage() {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
+                  {/* Checkbox column */}
+                  <th className="px-4 py-3 text-left">
+                    <input
+                      type="checkbox"
+                      checked={filtered.length > 0 && selectedOrderIds.size === filtered.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          selectAllOrders(filtered.map(o => o.kcs_internalorderid));
+                        } else {
+                          clearSelection();
+                        }
+                      }}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer"
+                    />
+                  </th>
                   {['Order ID', 'Item', 'Qty', 'Order Date', 'Needed By', 'Status', 'Ordered By', 'Assigned To', 'Actions'].map((h) => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       {h}
@@ -340,6 +467,15 @@ export default function AllOrdersPage() {
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {filtered.map((order) => (
                   <tr key={order.kcs_internalorderid} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    {/* Checkbox */}
+                    <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedOrderIds.has(order.kcs_internalorderid)}
+                        onChange={() => toggleSelectOrder(order.kcs_internalorderid)}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer"
+                      />
+                    </td>
                     <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white whitespace-nowrap">
                       {order.kcs_orderid ?? '-'}
                     </td>
