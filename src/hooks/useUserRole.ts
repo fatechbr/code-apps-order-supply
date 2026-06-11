@@ -15,37 +15,29 @@ export function useUserRole(userId: string): AppRole {
 
     const fetchRoles = async () => {
       try {
+        console.log('userId: ' + userId);
+
         const client = getClient(dataSourcesInfo);
 
-        // Query systemuserroles (junction table) joined with roles
-        // Using the systemusers data source with $expand on roles
+        // Query 'roles' directly filtered by the user via reverse navigation.
+        // This avoids $expand entirely and maps to:
+        // /roles?$filter=systemuserroles_association/any(u:u/systemuserid eq 'id')&$select=name,roleid
         const result = await client.retrieveMultipleRecordsAsync<{
           name: string;
           roleid: string;
-        }>('systemusers', {
-          top: 50,
-          filter: `systemuserid eq '${userId}'`,
-          expand: [
-            {
-              property: 'systemuserroles_association',
-              select: ['name', 'roleid'],
-            },
-          ],
+        }>('roles', {
+          filter: `systemuserroles_association/any(u:u/systemuserid eq '${userId}')`,
+          select: ['name', 'roleid'],
         } as any);
 
-        if (result.success && result.data && result.data.length > 0) {
-          const record = result.data[0] as any;
-          const roles: { name?: string }[] =
-            record['systemuserroles_association'] ?? [];
-          const roleNames = roles.map((r) => r.name ?? '');
+        console.log('Role query result:', result);
 
-          if (roleNames.includes(ROLE_ADMIN)) {
-            setRole('admin');
-          } else if (roleNames.includes(ROLE_USER)) {
-            setRole('user');
-          } else {
-            setRole('none');
-          }
+        const roleNames = (result.data ?? []).map((r) => r.name ?? '');
+
+        if (roleNames.includes(ROLE_ADMIN)) {
+          setRole('admin');
+        } else if (roleNames.includes(ROLE_USER)) {
+          setRole('user');
         } else {
           setRole('none');
         }
