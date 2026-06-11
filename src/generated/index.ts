@@ -7,9 +7,11 @@
 export * as CommonModels from './models/CommonModels';
 export * as Kcs_catalogitemsModel from './models/Kcs_catalogitemsModel';
 export * as Kcs_internalordersModel from './models/Kcs_internalordersModel';
+export * as RolesModel from './models/RolesModel';
 export * as SystemusersModel from './models/SystemusersModel';
 
 // Services
 export * from './services/Kcs_catalogitemsService';
 export * from './services/Kcs_internalordersService';
+export * from './services/RolesService';
 export * from './services/SystemusersService';
