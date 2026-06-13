@@ -217,7 +217,7 @@ export default function KanbanPage() {
               <span className="text-lg">{STATUS_ICONS[status]}</span>
               <h3 className="font-semibold text-gray-900 dark:text-white">{STATUS_LABELS[status]}</h3>
             </div>
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 px-2 py-1 rounded">
+            <span className="text-sm font-bold text-gray-700 dark:text-white bg-white/90 dark:bg-gray-900/80 px-2.5 py-1 rounded-md shadow-sm border border-gray-200 dark:border-gray-600">
               {columnOrders.length}
             </span>
           </div>

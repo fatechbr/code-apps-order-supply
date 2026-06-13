@@ -4,6 +4,7 @@ import { Kcs_internalordersService } from '../generated/services/Kcs_internalord
 import { Kcs_catalogitemsService } from '../generated/services/Kcs_catalogitemsService';
 import type { Kcs_internalorders } from '../generated/models/Kcs_internalordersModel';
 import type { Kcs_catalogitems } from '../generated/models/Kcs_catalogitemsModel';
+import DatePicker from './DatePicker';
 
 interface EditOrderModalProps {
   order: Kcs_internalorders & { itemName?: string };
@@ -14,8 +15,8 @@ interface EditOrderModalProps {
 export default function EditOrderModal({ order, onClose, onSuccess }: EditOrderModalProps) {
   const [selectedItemId, setSelectedItemId] = useState(order._kcs_item_value ?? '');
   const [quantity, setQuantity] = useState(order.kcs_quantity ?? 1);
-  const [neededBy, setNeededBy] = useState(
-    order.kcs_neededby ? order.kcs_neededby.substring(0, 10) : ''
+  const [neededBy, setNeededBy] = useState<Date | null>(
+    order.kcs_neededby ? new Date(order.kcs_neededby) : null
   );
   const [deliveryLocation, setDeliveryLocation] = useState(order.kcs_deliverylocation ?? '');
   const [notes, setNotes] = useState(order.kcs_notes ?? '');
@@ -44,7 +45,7 @@ export default function EditOrderModal({ order, onClose, onSuccess }: EditOrderM
       const result = await Kcs_internalordersService.update(order.kcs_internalorderid!, {
         ...(selectedItemId ? { "kcs_Item@odata.bind": `/kcs_catalogitems(${selectedItemId})` } : {}),
         kcs_quantity: quantity,
-        kcs_neededby: neededBy ? new Date(neededBy).toISOString() : undefined,
+        kcs_neededby: neededBy ? neededBy.toISOString() : undefined,
         kcs_deliverylocation: deliveryLocation,
         kcs_notes: notes,
       } as any);
@@ -92,18 +93,18 @@ export default function EditOrderModal({ order, onClose, onSuccess }: EditOrderM
 
             {/* Catalog Item */}
             <div className="mb-4">
-              <label htmlFor="edit-item" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="edit-item" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Catalog Item <span className="text-red-500">*</span>
               </label>
               {loadingItems ? (
-                <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-400 text-sm">Loading items...</div>
+                <div className="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md text-gray-400 dark:text-gray-400 text-sm">Loading items...</div>
               ) : (
                 <select
                   id="edit-item"
                   value={selectedItemId}
                   onChange={(e) => setSelectedItemId(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="">Select an item...</option>
                   {catalogItems.map((item) => (
@@ -117,7 +118,7 @@ export default function EditOrderModal({ order, onClose, onSuccess }: EditOrderM
 
             {/* Quantity */}
             <div className="mb-4">
-              <label htmlFor="edit-quantity" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="edit-quantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Quantity <span className="text-red-500">*</span>
               </label>
               <input
@@ -127,27 +128,27 @@ export default function EditOrderModal({ order, onClose, onSuccess }: EditOrderM
                 value={quantity}
                 onChange={(e) => setQuantity(Number(e.target.value))}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>
 
             {/* Needed By */}
             <div className="mb-4">
-              <label htmlFor="edit-neededBy" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="edit-neededBy" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Needed By
               </label>
-              <input
+              <DatePicker
                 id="edit-neededBy"
-                type="date"
                 value={neededBy}
-                onChange={(e) => setNeededBy(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={setNeededBy}
+                minDate={new Date()}
+                placeholderText="Select needed by date..."
               />
             </div>
 
             {/* Delivery Location */}
             <div className="mb-4">
-              <label htmlFor="edit-deliveryLocation" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="edit-deliveryLocation" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Delivery Location
               </label>
               <input
@@ -157,13 +158,13 @@ export default function EditOrderModal({ order, onClose, onSuccess }: EditOrderM
                 onChange={(e) => setDeliveryLocation(e.target.value)}
                 maxLength={100}
                 placeholder="e.g., Building A, Room 101"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
               />
             </div>
 
             {/* Notes */}
             <div className="mb-6">
-              <label htmlFor="edit-notes" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="edit-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Notes
               </label>
               <textarea
@@ -173,18 +174,18 @@ export default function EditOrderModal({ order, onClose, onSuccess }: EditOrderM
                 maxLength={100}
                 rows={3}
                 placeholder="Additional information..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
               />
             </div>
           </div>
 
           {/* Footer */}
-          <div className="border-t border-gray-200 px-6 py-4 flex gap-3 justify-end flex-shrink-0">
+          <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex gap-3 justify-end flex-shrink-0">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>

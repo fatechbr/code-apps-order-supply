@@ -33,10 +33,10 @@ export const OrderStatusMap: Record<number, OrderStatus> = {
 };
 
 export const OrderStatusColors: Record<OrderStatus, string> = {
-  Submitted: 'bg-gray-100 text-gray-800',
-  Approved: 'bg-blue-100 text-blue-800',
-  InProgress: 'bg-yellow-100 text-yellow-800',
-  Ordered: 'bg-purple-100 text-purple-800',
-  Delivered: 'bg-green-100 text-green-800',
-  Denied: 'bg-red-100 text-red-800',
+  Submitted: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100',
+  Approved: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200',
+  InProgress: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200',
+  Ordered: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200',
+  Delivered: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200',
+  Denied: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200',
 };

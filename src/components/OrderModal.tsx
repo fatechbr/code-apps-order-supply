@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Kcs_internalordersService } from '../generated/services/Kcs_internalordersService';
 import type { CatalogItem } from '../types';
+import DatePicker from './DatePicker';
 
 interface OrderModalProps {
   item: CatalogItem;
@@ -11,7 +12,7 @@ interface OrderModalProps {
 
 export default function OrderModal({ item, onClose, onSuccess }: OrderModalProps) {
   const [quantity, setQuantity] = useState(1);
-  const [neededBy, setNeededBy] = useState('');
+  const [neededBy, setNeededBy] = useState<Date | null>(null);
   const [deliveryLocation, setDeliveryLocation] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,7 +31,7 @@ export default function OrderModal({ item, onClose, onSuccess }: OrderModalProps
         "kcs_Item@odata.bind": `/kcs_catalogitems(${item.kcs_catalogitemid})`,
         kcs_quantity: quantity,
         kcs_orderdate: new Date().toISOString(),
-        kcs_neededby: neededBy ? new Date(neededBy).toISOString() : undefined,
+        kcs_neededby: neededBy ? neededBy.toISOString() : undefined,
         kcs_deliverylocation: deliveryLocation,
         kcs_notes: notes,
         kcs_orderstatus: 615710000, // Submitted
@@ -81,17 +82,17 @@ export default function OrderModal({ item, onClose, onSuccess }: OrderModalProps
 
           {/* Item Name (Read-only) */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Catalog Item
             </label>
-            <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-700">
+            <div className="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300">
               {item.kcs_itemname}
             </div>
           </div>
 
           {/* Quantity */}
           <div className="mb-4">
-            <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Quantity <span className="text-red-500">*</span>
             </label>
             <input
@@ -101,27 +102,27 @@ export default function OrderModal({ item, onClose, onSuccess }: OrderModalProps
               value={quantity}
               onChange={(e) => setQuantity(Number(e.target.value))}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
           </div>
 
           {/* Needed By */}
           <div className="mb-4">
-            <label htmlFor="neededBy" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="neededBy" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Needed By
             </label>
-            <input
+            <DatePicker
               id="neededBy"
-              type="date"
               value={neededBy}
-              onChange={(e) => setNeededBy(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={setNeededBy}
+              minDate={new Date()}
+              placeholderText="Select needed by date..."
             />
           </div>
 
           {/* Delivery Location */}
           <div className="mb-4">
-            <label htmlFor="deliveryLocation" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="deliveryLocation" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Delivery Location
             </label>
             <input
@@ -131,13 +132,13 @@ export default function OrderModal({ item, onClose, onSuccess }: OrderModalProps
               onChange={(e) => setDeliveryLocation(e.target.value)}
               maxLength={100}
               placeholder="e.g., Building A, Room 101"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
             />
           </div>
 
           {/* Notes */}
           <div className="mb-6">
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Notes
             </label>
             <textarea
@@ -147,18 +148,18 @@ export default function OrderModal({ item, onClose, onSuccess }: OrderModalProps
               maxLength={100}
               rows={3}
               placeholder="Additional information..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
             />
           </div>
           </div>
 
           {/* Actions - Fixed at bottom */}
-          <div className="border-t border-gray-200 px-6 py-4 flex gap-3 flex-shrink-0">
+          <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex gap-3 flex-shrink-0">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
